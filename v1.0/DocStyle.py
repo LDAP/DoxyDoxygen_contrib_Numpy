@@ -1,97 +1,111 @@
-# -*- coding: iso-latin-1 -*-
-#=============================================================================
+"""
+author: Lucas Alber <lucasd.alber@gmail.com>
+"""
+
+import os
 
 __license__ = "https://raw.githubusercontent.com/20Tauri/DoxyDoxygen_contrib_HeaderDoc/master/LICENSE.md"
 
-
-#-----------------------------------------------------------------------------
-## @brief      HeaderDoc commands description
-##
 COMMANDS_LIST = [
-    DoxyCommand( '@const',            '\t{ description_of_the_variable }',                              help = "Documents a constant within an enumeration", aliases = [ '@constant' ]),
-    DoxyCommand( '@param',            '\t<parameter_name>\t{ parameter_description }', key_index = 0,   help = "Documents the parameter to a function"),
-    DoxyCommand( '@return',           '\t{ description_of_the_return_value }',                          help = "Documents the return value of a function", aliases = [ '@results' ]),
-    DoxyCommand( '@raises',           '\t<exception_object>\t{ exception_description }', key_index = 0, help = "Starts an exception description for an exception object with name <exception-object>"),
-    DoxyCommand( '@var',              '\t{ description_of_the_variable }',                              help = "Documents a local variable in a function or method"),
+    DoxyCommand('@_hidden_param',  '<parameter_name> : { parameter_type }' + os.linesep + '    { parameter_description }', key_index=0,   help="Documents the parameter to a function"),
+    DoxyCommand('@_hidden_return', '{ return_value_type }' + os.linesep + '    { description_of_the_return_value }', help="Documents the return value of a function"),
+    DoxyCommand('@_hidden_raises', '{ exception_object }' + os.linesep + '    { exception_description }', key_index=0, help="Starts an exception description for an exception object with name <exception-object>"),
+
+    DoxyCommand('@_hidden_param_header', '<workaround>Parameters' + os.linesep + '----------'),
+    DoxyCommand('@_hidden_return_header', '<workaround>Returns' + os.linesep + '-------'),
+    DoxyCommand('@_hidden_raises_header', '<workaround>Raises' + os.linesep + '------'),
 ]
 
-#-----------------------------------------------------------------------------
-## @brief      This class describles the specific style of documentation used
-##             in HeaderDoc
-##
-## @see        HeaderDoc Tutorial <https://www.raywenderlich.com/66395/documenting-in-xcode-with-headerdoc-tutorial>
-##
+
 class DocStyle(DocStyleBase):
     ## Name of this style (will be used in your `profiles` settings)
     name = "Numpy"
 
-    #-------------------------------------------------------------------------
-    ## @brief      The constructor
-    ##
-    ##             It will define the list of availables commands.
-    ##             This list will be used for completion, formating...
-    ##
-    ##             A command is composed in:
-    ##                - A name
-    ##                - An arguments format string
-    ##                      - If <sharp> braces are used the argument is a single word.
-    ##                      - If (round) braces are used the argument extends until the end of
-    ##                        the line on which the command was found.
-    ##                      - If {curly} braces are used the argument extends until the next
-    ##                        paragraph. Paragraphs are delimited by a blank line or by a
-    ##                        section indicator.
-    ##                      - And [] mark in optional block
-    ##                - An optional `key_index` is o,e argument is a key (0 is first)
-    ##                - An optional `help` string to give to command description
-    ##                - An optional `aliases` list that give the name of aliases
-    ##
-    ## @param      self  The DocStyle object
-    ##
-    def __init__(self):
-        DocStyleBase.__init__(self, COMMANDS_LIST)
+    typename_to_decorated = {
+        EvaluatorBase.TYPE_STRING:  "str",
+        EvaluatorBase.TYPE_INTEGER: "int",
+        EvaluatorBase.TYPE_BOOLEAN: "bool",
+        EvaluatorBase.TYPE_FLOAT:   "float",
+        EvaluatorBase.TYPE_ARRAY:   "Array",
+        EvaluatorBase.TYPE_THIS:    "Object",
+    }
 
-    #-------------------------------------------------------------------------
-    ## @brief      Build the commands list tht match a definition
-    ##
-    ## @param      self        The object
-    ## @param      definition  The definition
-    ##
-    ## @return     The generated commands list.
-    ##
+    def __init__(self):
+        super().__init__(COMMANDS_LIST)
+
     def definition_to_commands_list(self, definition):
+        def decorated_type(typename):
+            return self.decorated_type(typename, DocStyle.typename_to_decorated, "%s")
+
         commands_list = []
 
-        if definition["kind"] in ["var"]:
-            commands_list += self.command("@var")
-        elif definition["kind"] in ["constant"]:
-            commands_list += self.command("@const")
-        else:
+        if definition["params"]:
+            commands_list += self.command('@_hidden_param_header', [""])
             for param in definition["params"]:
-                commands_list += self.command("@param", [param.name])
+                commands_list += self.command("@_hidden_param", [param.name, decorated_type(param.typename)])
 
-            definition_return = definition["return"]
-            if definition_return and definition_return != "void":
-                commands_list += self.command("@return")
+        definition_return = definition["return"]
+        if definition_return and definition_return != "void" and definition_return != "None":
+            commands_list += self.command("@_hidden_return_header", [""])
+            commands_list += self.command("@_hidden_return", [definition_return])
 
+        if definition["throws"]:
+            commands_list += self.command('@_hidden_raises_header', [""])
             for type_name in definition["throws"]:
-                commands_list += self.command("@raises", [type_name])
+                commands_list += self.command("@_hidden_raises", [decorated_type(type_name)])
 
         return commands_list
 
-    #-------------------------------------------------------------------------
-    ## @brief      Returns the list of commands that can be generate.
-    ##
-    ##             Generable commands are remove from `layout` when missing.
-    ##
-    ## @param      self  The object
-    ##
-    ## @return     The list
-    ##
     def generable_commands_names(self):
         return [
-            "@var",
-            "@const",
-            "@param",
-            "@return",
-            "@raises",
+            "@_hidden_param",
+            "@_hidden_return",
+            "@_hidden_raises",
+            "@_hidden_param_header",
+            "@_hidden_return_header",
+            "@_hidden_raises_header"
         ]
+
+    def uncommented_text_to_lines(self, uncommented_text):
+        """
+        Implements a custom DocBlock parser for this DocStyle (all plugins that use
+        hidden commands have to implement this method)
+
+        Parameters
+        ----------
+        uncommented_text : str
+            The text of the DocBlock whose the comment introducers have been
+            removed
+
+        Returns
+        -------
+        list
+            The list of detected lines. A line is composed of 2 items.
+            The first item is the name of the detected command.
+            The second is the list of arguments for this command (each argument is a string or None if the value is yet to be determined)
+
+        Examples
+        --------
+        >>> uncommented_text = ""
+        >>> uncommented_text += "Build indices specifying all the Cartesian products of Chebychev\n"
+        >>> uncommented_text += "polynomials needed to build Smolyak polynomial\n"
+        >>> uncommented_text += ""
+        >>> uncommented_text += "Parameters\n"
+        >>> uncommented_text += "----------\n"
+        >>> uncommented_text += "    x : type\n"
+        >>> uncommented_text += "    Description of parameter `x`.\n"
+        >>> uncommented_text += "    y\n"
+        >>> uncommented_text += "    Description of parameter `y` (with type not specified).\n"
+        >>> uncommented_text += "\n"
+        >>> doc_style.uncommented_text_to_lines(uncommented_text)
+        [
+            ('@_brief', [' ']),
+            ('@_brief', ['Build indices specifying all the Cartesian products of Chebychev polynomials needed to build Smolyak polynomial ']),
+            ('@_hidden_Parameters_Header', ['']),
+            ('@_hidden_Parameters_Header', ['Parameters']),
+            ('@_hidden_Parameters_Header', ['----------']),
+            ('@_hidden_Parameter', ['x', 'type', 'Description of parameter `x`.']),
+            ('@_hidden_Parameter', ['y', None, 'Description of parameter `y` (with type not specified).']),
+        ]
+        """
+        pass
