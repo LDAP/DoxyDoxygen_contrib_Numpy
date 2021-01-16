@@ -4,7 +4,7 @@
 This plugin adds Numpy docstring style support to [DoxyDoxygen](https://github.com/20Tauri/DoxyDoxygen).
 
 ## Installation
-- Install DoxyDoxygen via PackageControl
+- Install DoxyDoxygen (>=0.78.1) via PackageControl
 - Set the DoxyDoxygen settings to:
 
 ```json
