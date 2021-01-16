@@ -5,7 +5,7 @@ author: Lucas Alber <lucasd.alber@gmail.com>
 import os
 import re
 
-__license__ = "https://raw.githubusercontent.com/20Tauri/DoxyDoxygen_contrib_HeaderDoc/master/LICENSE.md"
+__license__ = "https://raw.githubusercontent.com/LDAP/DoxyDoxygen_contrib_Numpy/master/LICENSE.md"
 
 param_header = 'Parameters' + os.linesep + '----------'
 return_header = 'Returns' + os.linesep + '-------'
