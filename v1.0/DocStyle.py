@@ -71,26 +71,6 @@ class DocStyle(DocStyleBase):
             "@_hidden_raises_header"
         ]
 
-    def fun(a: int, b) -> str:
-        """
-        { function_description }
-
-        Parameters
-        ----------
-        a : int
-            { parameter_description }
-        b : { parameter_type }
-            { parameter_description }
-
-        Returns
-        -------
-        str
-            { description_of_the_return_value }
-        """
-        if b:
-            raise IndexError()
-        return ""
-
     def uncommented_text_to_lines(self, uncommented_text):
         """
         Implements a custom DocBlock parser for this DocStyle (all plugins that use
