@@ -23,9 +23,9 @@ This plugin adds Numpy docstring style support to [DoxyDoxygen](https://github.c
             "///"
         ],
         [
+            [ "\"\"\"", "", "" ],
+            "",
             "\"\"\"",
-            [],
-            "\"\"\""
         ],
         [
             "##",

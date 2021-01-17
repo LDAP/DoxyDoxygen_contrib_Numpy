@@ -2,38 +2,30 @@
 author: Lucas Alber <lucasd.alber@gmail.com>
 """
 
-import os
 import re
 
 __license__ = (
     "https://raw.githubusercontent.com/LDAP/DoxyDoxygen_contrib_Numpy/master/LICENSE.md"
 )
 
-param_header = "Parameters" + os.linesep + "----------"
-return_header = "Returns" + os.linesep + "-------"
-raises_header = "Raises" + os.linesep + "------"
+param_header = "Parameters\n----------"
+return_header = "Returns\n-------"
+raises_header = "Raises\n------"
 
 COMMANDS_LIST = [
     DoxyCommand(
         "@_hidden_param",
-        "<parameter_name> : { parameter_type }"
-        + os.linesep
-        + "    { parameter_description }",
+        "<parameter_name> : { parameter_type }\n    { parameter_description }",
         key_index=0,
-        help="Documents the parameter to a function",
     ),
     DoxyCommand(
         "@_hidden_return",
-        "{ return_value_type }"
-        + os.linesep
-        + "    { description_of_the_return_value }",
-        help="Documents the return value of a function",
+        "{ return_value_type }\n    { description_of_the_return_value }",
     ),
     DoxyCommand(
         "@_hidden_raises",
-        "{ exception_object }" + os.linesep + "    { exception_description }",
+        "{ exception_object }\n    { exception_description }",
         key_index=0,
-        help="Starts an exception description for an exception object with name <exception-object>",
     ),
     DoxyCommand("@_hidden_param_header", "<workaround>" + param_header),
     DoxyCommand("@_hidden_return_header", "<workaround>" + return_header),
@@ -146,13 +138,13 @@ class DocStyle(DocStyleBase):
         if match:
             parse_result += ("@_brief", [match.group()])
 
-        param_header_regex = re.compile(param_header.replace(os.linesep, "\n"))
+        param_header_regex = re.compile(param_header)
         if param_header_regex.search(uncommented_text):
             parse_result += ("@_hidden_param_header", [""])
-        return_header_regex = re.compile(return_header.replace(os.linesep, "\n"))
+        return_header_regex = re.compile(return_header)
         if return_header_regex.search(uncommented_text):
             parse_result += ("@_hidden_return_header", [""])
-        raises_header_regex = re.compile(raises_header.replace(os.linesep, "\n"))
+        raises_header_regex = re.compile(raises_header)
         if raises_header_regex.search(uncommented_text):
             parse_result += ("@_hidden_raises_header", [""])
 
