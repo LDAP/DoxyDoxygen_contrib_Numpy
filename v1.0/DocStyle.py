@@ -68,13 +68,13 @@ class DocStyle(DocStyleBase):
             and definition_return != "None"
         ):
             commands_list += self.command("@_hidden_return_header", [""])
-            commands_list += self.command("@_hidden_return", [definition_return])
+            commands_list += self.command("@_hidden_return", [decorated_type(definition_return)])
 
         if definition["throws"]:
             commands_list += self.command("@_hidden_raises_header", [""])
             for type_name in definition["throws"]:
                 commands_list += self.command(
-                    "@_hidden_raises", [decorated_type(type_name)]
+                    "@_hidden_raises", [type_name]
                 )
 
         return commands_list
